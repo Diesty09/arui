@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "440216792580",
+    "project_id": "arui-digital",
+    "storage_bucket": "arui-digital.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:440216792580:android:da8b7d0e58d4ca42a9cf51",
+        "android_client_info": {
+          "package_name": "arui.digital"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDf6OMqPJCKRPLyjZX8BLP5XCJCNgkHzjM"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

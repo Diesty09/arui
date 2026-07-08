@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    
+    // Fungsi bantuan
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(userId) {
+      return request.auth.uid == userId;
+    }
+
+    function isAdmin() {
+      // Asumsi admin role ditandai dalam collection users
+      return get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'admin';
+    }
+
+    // Aturan Collection Users
+    match /users/{userId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && isOwner(userId);
+      allow update: if isAuthenticated() && isOwner(userId);
+      allow delete: if isAdmin();
+    }
+
+    // Aturan UMKM Profiles
+    match /umkm_profiles/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && isOwner(userId);
+      allow delete: if isAuthenticated() && (isOwner(userId) || isAdmin());
+    }
+
+    // Aturan Influencer Profiles
+    match /influencer_profiles/{userId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isAuthenticated() && isOwner(userId);
+      allow delete: if isAuthenticated() && (isOwner(userId) || isAdmin());
+    }
+
+    // Aturan Campaigns
+    match /campaigns/{campaignId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (request.resource.data.umkmId == request.auth.uid || isAdmin());
+      allow update: if isAuthenticated() && (resource.data.umkmId == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && (resource.data.umkmId == request.auth.uid || isAdmin());
+    }
+
+    // Aturan Offers
+    match /offers/{offerId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (request.resource.data.influencerId == request.auth.uid || isAdmin());
+      allow update: if isAuthenticated() && (resource.data.influencerId == request.auth.uid || resource.data.umkmId == request.auth.uid || isAdmin());
+      allow delete: if isAuthenticated() && (resource.data.umkmId == request.auth.uid || isAdmin());
+    }
+
+    // Aturan Chats (Hanya partisipan dan admin yang bisa membaca dan menulis)
+    match /chats/{chatId} {
+      allow read: if isAuthenticated() && (resource == null || resource.data.umkmId == request.auth.uid || resource.data.influencerId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && (request.resource.data.umkmId == request.auth.uid || request.resource.data.influencerId == request.auth.uid || isAdmin());
+      allow update: if isAuthenticated() && (resource.data.umkmId == request.auth.uid || resource.data.influencerId == request.auth.uid || isAdmin());
+      allow delete: if isAdmin();
+      
+      match /messages/{messageId} {
+        allow read, create: if isAuthenticated();
+      }
+    }
+
+    // Aturan Payments
+    match /payments/{paymentId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (request.resource.data.umkmId == request.auth.uid || isAdmin());
+      allow update: if isAdmin() || (isAuthenticated() && (resource.data.umkmId == request.auth.uid || resource.data.influencerId == request.auth.uid));
+      allow delete: if isAdmin();
+    }
+
+    // Aturan Ratings
+    match /ratings/{ratingId} {
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (request.resource.data.umkmId == request.auth.uid || isAdmin());
+    }
+    // Aturan App Config (konfigurasi global seperti metode pembayaran)
+    // Semua user login bisa READ (UMKM butuh baca metode pembayaran)
+    // Hanya admin yang bisa WRITE
+    match /app_config/{document=**} {
+      allow read: if isAuthenticated();
+      allow write: if isAdmin();
+    }
+  }
+}
