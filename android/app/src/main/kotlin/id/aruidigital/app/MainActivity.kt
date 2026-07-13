@@ -1,4 +1,4 @@
-package arui.digital
+package id.aruidigital.app
 
 import io.flutter.embedding.android.FlutterActivity
 
